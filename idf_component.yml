@@ -1,0 +1,8 @@
+version: 2.0.0
+description: >-
+  Rabbit rally protocols for ESP-IDF: RabbitBox / Rabbit Connect server and client (TCP, UDP 11912),
+  pilot-screen client and server (UDP 7532), and box-server-with-automatic-pilot. Supersedes rbx-protocol-server.
+repository: https://github.com/FuraRally/rbx-protocol.git
+dependencies:
+  idf:
+    version: '>=5.0.0'

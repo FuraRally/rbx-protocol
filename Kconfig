@@ -1,0 +1,33 @@
+menu "Rabbit protocol (rbx)"
+
+    config RBX_MAX_BOX_CLIENTS
+        int "Max box clients per transport"
+        range 1 8
+        default 4
+        help
+            Simultaneous Rabbit 2 / Rabbit Connect clients the box server accepts (TCP), and UDP
+            clients it remembers.
+
+    config RBX_MAX_PILOTS
+        int "Max pilot screens (pilot server)"
+        range 1 8
+        default 4
+
+    config RBX_TASK_STACK
+        int "Task stack size"
+        default 4096
+
+    config RBX_TASK_PRIORITY
+        int "Task priority"
+        range 1 24
+        default 5
+
+    config RBX_LEGACY_AUTO_PILOT
+        bool "Legacy rb_start(): also subscribe as pilot to whoever connects"
+        default n
+        help
+            With the legacy rb.h API, rb_start() starts rbx_link instead of the plain box server: when
+            Rabbit 2 connects to the box it also receives Rabbit's computed data (rbx_link_pilot()).
+            Needs UDP port 7532 free.
+
+endmenu

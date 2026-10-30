@@ -1,0 +1,17 @@
+menu "Example configuration"
+
+    config EXAMPLE_AP_SSID
+        string "Access point SSID"
+        default "RabbitBox1001"
+        help
+            Rabbit 2 learns the box number from an SSID "RabbitBox<n>". Use 1000-1099 (not 1051) for TCP.
+
+    config EXAMPLE_AP_PASSWORD
+        string "Access point password (empty = open)"
+        default ""
+
+    config EXAMPLE_SIM_SPEED_KMH
+        int "Simulated speed (km/h)"
+        default 50
+
+endmenu
