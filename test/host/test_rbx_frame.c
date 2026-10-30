@@ -126,7 +126,7 @@ static void test_pilot_apply(void)
     rbx_pilot_state_t st;
     rbx_pilot_state_init(&st);
     uint16_t mask = 0;
-    /* Real datagrams: session 1 capture and session 2 live log. */
+    /* Real datagrams, as captured from the Rabbit 2 app. */
     feed_datagram(&st, "10.653;30.0|572248.6|6E76>NN|73|25.656;1.162|013:35:39;20:04:39|", &mask);
     CHECK(mask == (RBX_TAG_BIT('0') | RBX_TAG_BIT('1') | RBX_TAG_BIT('2') | RBX_TAG_BIT('5') | RBX_TAG_BIT('6') |
                    RBX_TAG_BIT('7')));

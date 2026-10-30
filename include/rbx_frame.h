@@ -5,7 +5,7 @@
  * - Box stream (RabbitBox / Rabbit Connect -> Rabbit 2): `pulse=`, `pc=`, GPS lines, buttons.
  * - Pilot stream (Rabbit 2 -> pilot screens): one-character tags `0`..`9`.
  *
- * Every record ends with '|'. CR/LF are ignored. See the protocol docs in rabbit-protocol/docs/protocols/.
+ * Every record ends with '|'. CR/LF are ignored.
  */
 #ifndef RBX_FRAME_H
 #define RBX_FRAME_H

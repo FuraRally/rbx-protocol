@@ -10,7 +10,6 @@
  * | rbx_pilot_client.h   | act as a pilot screen of a main Rabbit 2 phone (UDP 7532)         |
  * | rbx_pilot_server.h   | act as the main app serving pilot screens (UDP 7532)              |
  * | rbx_link.h           | box server + automatic pilot client to whoever connects           |
- * | rb.h                 | legacy rbx-protocol-server API (rb_start / rb_send_frame)         |
  */
 #ifndef RBX_H
 #define RBX_H

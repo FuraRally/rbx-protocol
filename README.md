@@ -10,10 +10,8 @@ ESP-IDF component implementing the Rabbit rally protocols, **both sides**:
 | Act as the main app serving pilot screens | `rbx_pilot_server.h` | UDP 7532 |
 | Box server **+ automatic pilot** to whoever connects | `rbx_link.h` | both |
 | Portable framing / encoders / parsers (no ESP-IDF) | `rbx_frame.h` | — |
-| Legacy `rbx-protocol-server` API | `rb.h` | TCP 11912 |
 
-It supersedes [rbx-protocol-server](../rbx-protocol-server/). The protocol specs (from captures, live tests and analysis
-of the app) are in [rabbit-protocol/docs/protocols](../rabbit-protocol/docs/protocols/README.md).
+It supersedes [rbx-protocol-server](https://github.com/FuraRally/rbx-protocol-server).
 
 ## Disclaimer
 
@@ -26,14 +24,14 @@ authors. "Rabbit" may be a trademark of its owner. No original code or assets of
 # main/idf_component.yml
 dependencies:
   rbx-protocol:
-    path: ../../rbx-protocol          # or git: https://github.com/FuraRally/rbx-protocol.git
+    git: https://github.com/FuraRally/rbx-protocol.git
 ```
 
 ## The idea: box + pilot ("link")
 
 When Rabbit 2 connects to our box port, `rbx_link` subscribes as a pilot screen to that same IP. Rabbit 2 always runs
 its pilot server, so the device gets Rabbit's computed values with zero configuration: distance, speed, difference to
-ideal, substage, references, chronometer. A display or the FuraStrip can then show them.
+ideal, substage, references, chronometer. A display, for example, can then show them.
 
 ```c
 #include "rbx.h"
@@ -80,7 +78,7 @@ pc.main_addr = ipaddr_addr("192.168.100.114");
 pc.on_update = on_update;
 rbx_pilot_client_start(&pc, &h2);
 
-/* Be the main app for pilot screens (e.g. FuraZero's own rally data) */
+/* Be the main app for pilot screens (e.g. with the device's own rally data) */
 rbx_pilot_server_config_t ps = RBX_PILOT_SERVER_DEFAULT_CONFIG();
 rbx_pilot_server_start(&ps);
 char rec[40];
@@ -90,23 +88,21 @@ rbx_pilot_server_set(RBX_TAG_KM_SPEED, rec);   /* the server sends only what cha
 
 ## Migrating from rbx-protocol-server
 
-Swap the dependency; `#include "rb.h"`, `rb_start()`, `RB_FRAME_*` and `rb_send_frame()` keep working.
-With `CONFIG_RBX_LEGACY_AUTO_PILOT=y`, `rb_start()` starts the link, so you also get `rbx_link_pilot()`.
+`rbx-protocol-server` is deprecated and this component does not provide its API. Replace:
 
-Changes compared to the old server:
-- One task with `select()` instead of one task per client.
-- Sends have a timeout (`send_timeout_ms`, default 100 ms). A client that can't keep up is dropped instead of
-  blocking the pulse task.
-- The 0x01 acks from Rabbit 2 are counted (`rbx_box_server_ack_count()`).
-- Optional UDP transport.
-- `rb_send_frame()` returns `ESP_ERR_INVALID_STATE` if the server isn't running.
+| Old (`rb.h`) | New |
+|---|---|
+| `rb_start()` / `rb_stop()` | `rbx_box_server_start(&cfg)` / `rbx_box_server_stop()`, or `rbx_link_start()` / `rbx_link_stop()` for box + pilot |
+| `rb_send_frame(&RB_FRAME_PULSE(s1, s2, ms))` | `rbx_box_server_send_pulse(s1, s2, ms)` |
+| `rb_send_frame(&RB_FRAME_BUTTON(RB_LAP, s1, s2))` | `rbx_box_server_send_button(RBX_MSG_LAP, s1, s2)` |
+| `RB_BUTTON_UP`, `RB_BUTTON_DOWN`, `RB_BUTTON_UP_10`, `RB_BUTTON_DOWN_10`, `RB_LAP`, `RB_CKM` | `RBX_MSG_BT_UP`, `RBX_MSG_BT_DOWN`, `RBX_MSG_BT_UP_10`, `RBX_MSG_BT_DOWN_10`, `RBX_MSG_LAP`, `RBX_MSG_CKM` |
 
 ## Notes and limits
 - **UDP 7532 is needed by the pilot client and by the pilot server.** Only one of them can run on a device.
 - The real app answers pilots only on port 7532 and keeps every pilot registered until it restarts.
   Re-subscribing is harmless.
-- Box numbers in Rabbit 2: an AP named `RabbitBox10xx` at `192.168.4.1` with box number 1000–1099 selects TCP.
-  See [box-number.md](../rabbit-protocol/docs/protocols/rabbitbox/box-number.md).
+- Box numbers in Rabbit 2 select the transport: 1000–1099 → TCP to `192.168.4.1:11912`; 1051 and 1100–1199 → UDP
+  to `10.10.10.1`; 1200+ → UDP to `192.168.4.1`. Naming the AP `RabbitBox<number>` lets the app learn the number.
 - Number formatting uses `printf` (binary rounding). Rabbit rounds decimals half away from zero, so a value exactly on
   a half (e.g. `1.0365` km) can differ in the last digit.
 - BLE (pilot over GATT `fff0/fff1`, BLE boxes) is not implemented yet.
@@ -122,21 +118,13 @@ cmake -S test/host -B test/host/build && cmake --build test/host/build && ctest 
 Example app: [examples/box_with_pilot](examples/box_with_pilot/main/main.c), a simulated box that logs Rabbit's
 data. It builds for ESP32-S3 and ESP32-C3.
 
-### On hardware, with rabbitlab (no phone needed)
+### On hardware, with the Rabbit 2 app
 
-Flash the example, join the PC to the `RabbitBox1001` Wi-Fi, then from `rabbit-protocol/rabbitlab/`:
-
-```sh
-./rlab --control 47531 pilot main --speed 50 &   # the PC plays the main app on UDP 7532
-./rlab client 192.168.4.1                         # the PC plays Rabbit 2 connecting to the box
-```
-
-The ESP should:
-- serve pulses to `rlab client` (km increasing at the simulated speed, acks counted);
-- subscribe to the PC as a pilot as soon as `rlab client` connects;
-- log `Rabbit: km … diff … substage …` coming from `rlab pilot main`.
-
-Then the same with the real phone: Rabbit 2 → Connections → box number 1001.
+Flash the example, connect the phone to the `RabbitBox1001` Wi-Fi, and in Rabbit 2 → Connections enter box number
+`1001`. The ESP should:
+- serve pulses (the odometer advances at the simulated speed);
+- subscribe to the phone as a pilot as soon as Rabbit connects;
+- log `Rabbit: km … diff … substage …` with the values computed by the app.
 
 ## License
 

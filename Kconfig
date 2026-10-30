@@ -22,12 +22,4 @@ menu "Rabbit protocol (rbx)"
         range 1 24
         default 5
 
-    config RBX_LEGACY_AUTO_PILOT
-        bool "Legacy rb_start(): also subscribe as pilot to whoever connects"
-        default n
-        help
-            With the legacy rb.h API, rb_start() starts rbx_link instead of the plain box server: when
-            Rabbit 2 connects to the box it also receives Rabbit's computed data (rbx_link_pilot()).
-            Needs UDP port 7532 free.
-
 endmenu

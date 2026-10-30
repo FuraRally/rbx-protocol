@@ -8,7 +8,6 @@ idf_component_register(
         "src/rbx_pilot_client.c"
         "src/rbx_pilot_server.c"
         "src/rbx_link.c"
-        "src/rb_compat.c"
     INCLUDE_DIRS "include"
     PRIV_INCLUDE_DIRS "src"
     REQUIRES lwip freertos
